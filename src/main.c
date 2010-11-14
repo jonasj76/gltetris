@@ -41,24 +41,45 @@ void render_scene (void)
       }
 }
 
-void GLFWCALL resize_window( int width, int height )
+void GLFWCALL resize_window (int width, int height )
 {
+   /* Calculate block x- and y-size */
    block_size_x = width  / WIN_BLOCK_WIDTH;
    block_size_y = height / WIN_BLOCK_HEIGHT;
 
-   glViewport (0, 0, width, height);
+   /* Recalculate window size to match block size multiple (fix rounding problem) */
+   width  = block_size_x * WIN_BLOCK_WIDTH;
+   height = block_size_y * WIN_BLOCK_HEIGHT;
 
+   /* Set new window size */
+   glfwSetWindowSize (width, height);
+
+   /* Setup new viewport */
+   glViewport (0, 0, width, height);
    glMatrixMode (GL_PROJECTION);
    glLoadIdentity ();
    glOrtho (0.0, width, 0.0, height, -1.0, 1.0);
 }
 
-void init_scene (void)
+void init (void)
 {
+   /* Open an OpenGL window */
+   if (!glfwOpenWindow (INIT_WIN_WIDTH, INIT_WIN_HEIGHT, 0, 0, 0, 0, WIN_DEPTH_BITS, 0, GLFW_WINDOW))
+   {
+      printf ("error: glfwOpenWindow() failed.\n");
+      exit (EXIT_FAILURE);
+   }
+
+   /* Set window title */
+   glfwSetWindowTitle ("glTetris");
+
+   /* Select clearing (background) color */
    glClearColor (0.0, 0.0, 0.0, 0.0);
 
+   /* Setup callback for window resizing */
    glfwSetWindowSizeCallback (resize_window);
 
+   /* Setup window with init values */
    resize_window (INIT_WIN_WIDTH, INIT_WIN_HEIGHT);
 }
 
@@ -78,15 +99,8 @@ int main (void)
       exit (EXIT_FAILURE);
    }
 
-   /* Open an OpenGL window */
-   if (!glfwOpenWindow (INIT_WIN_WIDTH, INIT_WIN_HEIGHT, 0, 0, 0, 0, WIN_DEPTH_BITS, 0, GLFW_WINDOW))
-   {
-      printf ("error: glfwOpenWindow() failed.\n");
-      exit (EXIT_FAILURE);
-   }
-
-   /* Initialize render scene */
-   init_scene ();
+   /* Initialize */
+   init ();
 
    /* Main loop. Wait until ESC key was pressed or window was closed */
    while (GLFW_PRESS != glfwGetKey (GLFW_KEY_ESC) && glfwGetWindowParam (GLFW_OPENED))
