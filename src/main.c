@@ -7,13 +7,14 @@
 #define BOARD_ROWS 20
 
 /* Init parameters */
-#define INIT_BLOCK_SIZE  20
+#define INIT_WIN_WIDTH  200
+#define INIT_WIN_HEIGHT 400
 
 /* Window parameters */
 #define WIN_DEPTH_BITS 8
 
-int block_size_x = INIT_BLOCK_SIZE;
-int block_size_y = INIT_BLOCK_SIZE;
+int block_size_x;
+int block_size_y;
 
 typedef struct color_t
 {
@@ -21,6 +22,22 @@ typedef struct color_t
    float g;
    float b;
 } color_t;
+
+typedef int shape_t[3][3];
+
+shape_t shape1 =
+{
+   {0, 1, 0},
+   {1, 1, 1},
+   {0, 0, 0}
+};
+shape_t shape2 =
+{
+   {1, 1, 0},
+   {0, 1, 1},
+   {0, 0, 0}
+};
+
 
 void draw_block (int row, int col, struct color_t color)
 {
@@ -39,18 +56,36 @@ void draw_block (int row, int col, struct color_t color)
    glEnd ();
 }
 
+void draw_shape (shape_t shape, int row, int col, struct color_t color)
+{
+   int x, y;
+
+   for (x=0; x<3; x++)
+      for (y=0; y<3; y++)
+      {
+	 if (shape[y][x])
+	 {
+	    draw_block (row+x, col+y, color);
+	 }
+      }
+}
+
 void render_scene (void)
 {
    int x, y;
-   color_t color = {1.0, 0.0, 0.0};
+   color_t red   = {1.0, 0.0, 0.0};
+   color_t green = {0.0, 1.0, 0.0};
+   color_t blue  = {0.0, 0.0, 1.0};
 
    glClear (GL_COLOR_BUFFER_BIT);
    for (x=0; x<BOARD_COLS; x++)
       for (y=0; y<BOARD_ROWS; y++)
       {
 	 if ((x+y)%2)
-	    draw_block (x, y, color);
+	    draw_block (x, y, red);
       }
+   draw_shape (shape1, 5,  5, green);
+   draw_shape (shape2, 1, 10, blue);
 }
 
 void GLFWCALL resize_window (int width, int height)
@@ -70,14 +105,14 @@ void GLFWCALL resize_window (int width, int height)
    glViewport (0, 0, width, height);
    glMatrixMode (GL_PROJECTION);
    glLoadIdentity ();
-   /* Origin at top left */
+   /* Origin at top-left */
    glOrtho (0.0, width, height, 0.0, -1.0, 1.0);
 }
 
 void init (void)
 {
-   int width  = INIT_BLOCK_SIZE * BOARD_COLS;
-   int height = INIT_BLOCK_SIZE * BOARD_ROWS;
+   int width  = INIT_WIN_WIDTH;
+   int height = INIT_WIN_HEIGHT;
 
    /* Open an OpenGL window */
    if (!glfwOpenWindow (width, height, 0, 0, 0, 0, WIN_DEPTH_BITS, 0, GLFW_WINDOW))
