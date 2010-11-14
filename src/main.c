@@ -3,23 +3,34 @@
 #include <GL/glfw.h>
 
 /* Game parameters */
+#define BOARD_COLS 10
+#define BOARD_ROWS 20
+
+/* Init parameters */
 #define INIT_BLOCK_SIZE  20
-#define WIN_BLOCK_WIDTH  10
-#define WIN_BLOCK_HEIGHT 20
 
 /* Window parameters */
-#define INIT_WIN_WIDTH   WIN_BLOCK_WIDTH  * INIT_BLOCK_SIZE
-#define INIT_WIN_HEIGHT  WIN_BLOCK_HEIGHT * INIT_BLOCK_SIZE
 #define WIN_DEPTH_BITS 8
 
 int block_size_x = INIT_BLOCK_SIZE;
 int block_size_y = INIT_BLOCK_SIZE;
 
-void draw_block (int x, int y)
+typedef struct color_t
 {
-   x = block_size_x * x;
-   y = block_size_y * y;
+   float r;
+   float g;
+   float b;
+} color_t;
 
+void draw_block (int row, int col, struct color_t color)
+{
+   float x, y;
+
+   /* Set starting coordinates */
+   x = block_size_x * row;
+   y = block_size_y * col;
+
+   glColor3f (color.r, color.g, color.b);
    glBegin (GL_QUADS);
    glVertex2f (x,                y);
    glVertex2f (x + block_size_x, y);
@@ -31,25 +42,26 @@ void draw_block (int x, int y)
 void render_scene (void)
 {
    int x, y;
+   color_t color = {1.0, 0.0, 0.0};
 
    glClear (GL_COLOR_BUFFER_BIT);
-   for (x=0; x<WIN_BLOCK_WIDTH; x++)
-      for (y=0; y<WIN_BLOCK_HEIGHT; y++)
+   for (x=0; x<BOARD_COLS; x++)
+      for (y=0; y<BOARD_ROWS; y++)
       {
 	 if ((x+y)%2)
-	    draw_block (x, y);
+	    draw_block (x, y, color);
       }
 }
 
-void GLFWCALL resize_window (int width, int height )
+void GLFWCALL resize_window (int width, int height)
 {
    /* Calculate block x- and y-size */
-   block_size_x = width  / WIN_BLOCK_WIDTH;
-   block_size_y = height / WIN_BLOCK_HEIGHT;
+   block_size_x = width  / BOARD_COLS;
+   block_size_y = height / BOARD_ROWS;
 
    /* Recalculate window size to match block size multiple (fix rounding problem) */
-   width  = block_size_x * WIN_BLOCK_WIDTH;
-   height = block_size_y * WIN_BLOCK_HEIGHT;
+   width  = block_size_x * BOARD_COLS;
+   height = block_size_y * BOARD_ROWS;
 
    /* Set new window size */
    glfwSetWindowSize (width, height);
@@ -58,13 +70,17 @@ void GLFWCALL resize_window (int width, int height )
    glViewport (0, 0, width, height);
    glMatrixMode (GL_PROJECTION);
    glLoadIdentity ();
-   glOrtho (0.0, width, 0.0, height, -1.0, 1.0);
+   /* Origin at top left */
+   glOrtho (0.0, width, height, 0.0, -1.0, 1.0);
 }
 
 void init (void)
 {
+   int width  = INIT_BLOCK_SIZE * BOARD_COLS;
+   int height = INIT_BLOCK_SIZE * BOARD_ROWS;
+
    /* Open an OpenGL window */
-   if (!glfwOpenWindow (INIT_WIN_WIDTH, INIT_WIN_HEIGHT, 0, 0, 0, 0, WIN_DEPTH_BITS, 0, GLFW_WINDOW))
+   if (!glfwOpenWindow (width, height, 0, 0, 0, 0, WIN_DEPTH_BITS, 0, GLFW_WINDOW))
    {
       printf ("error: glfwOpenWindow() failed.\n");
       exit (EXIT_FAILURE);
@@ -80,7 +96,7 @@ void init (void)
    glfwSetWindowSizeCallback (resize_window);
 
    /* Setup window with init values */
-   resize_window (INIT_WIN_WIDTH, INIT_WIN_HEIGHT);
+   resize_window (width, height);
 }
 
 int main (void)
