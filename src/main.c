@@ -23,26 +23,28 @@ typedef struct color_t
    float b;
 } color_t;
 
-typedef int shape_t[3][3];
+typedef int shape_t[3];
 
+/* A shape consists of a block at the center and 3 other
+ * blocks at the coodinates specified in the space_t type.
+ */
 shape_t shape1 =
 {
-   {0, 1, 0},
-   {1, 1, 1},
-   {0, 0, 0}
+   -BOARD_COLS, -1, +1
 };
 shape_t shape2 =
 {
-   {1, 1, 0},
-   {0, 1, 1},
-   {0, 0, 0}
+   -BOARD_COLS-1, -BOARD_COLS, +1
 };
 
-
-void draw_block (int row, int col, struct color_t color)
+void draw_block (int pos, struct color_t color)
 {
    float x, y;
+   int row,col;
 
+   /* Calculate row and columnl */
+   row = pos % BOARD_COLS;
+   col = pos / BOARD_COLS;
    /* Set starting coordinates */
    x = block_size_x * row;
    y = block_size_y * col;
@@ -56,18 +58,15 @@ void draw_block (int row, int col, struct color_t color)
    glEnd ();
 }
 
-void draw_shape (shape_t shape, int row, int col, struct color_t color)
+void draw_shape (shape_t shape, int col, int row, struct color_t color)
 {
-   int x, y;
+   int pos;
 
-   for (x=0; x<3; x++)
-      for (y=0; y<3; y++)
-      {
-	 if (shape[y][x])
-	 {
-	    draw_block (row+x, col+y, color);
-	 }
-      }
+   pos = col + row * BOARD_COLS;
+   draw_block (pos,            color);
+   draw_block (pos + shape[0], color);
+   draw_block (pos + shape[1], color);
+   draw_block (pos + shape[2], color);
 }
 
 void render_scene (void)
@@ -82,7 +81,7 @@ void render_scene (void)
       for (y=0; y<BOARD_ROWS; y++)
       {
 	 if ((x+y)%2)
-	    draw_block (x, y, red);
+	    draw_block (x + y*BOARD_COLS, red);
       }
    draw_shape (shape1, 5,  5, green);
    draw_shape (shape2, 1, 10, blue);
