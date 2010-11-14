@@ -28,14 +28,30 @@ typedef int shape_t[3];
 /* A shape consists of a block at the center and 3 other
  * blocks at the coodinates specified in the space_t type.
  */
-shape_t shape1 =
+shape_t shapes[] =
 {
-   -BOARD_COLS, -1, +1
+   {-BOARD_COLS - 1, -BOARD_COLS,     -1            },  /* square */
+   {-1,              +1,              +2            },  /* horizintal line */
+   {-BOARD_COLS,      BOARD_COLS,      BOARD_COLS * 2}, /* verical line */
+   {-BOARD_COLS,      BOARD_COLS,      BOARD_COLS + 1}, /* L */
+   {-BOARD_COLS,      BOARD_COLS,      BOARD_COLS - 1}, /* flipped L */
+   {-BOARD_COLS,     -BOARD_COLS + 1,  BOARD_COLS    }, /* up-side-down L */
+   {-BOARD_COLS - 1, -BOARD_COLS,      BOARD_COLS    }, /* up-side-down flipped L */
+   {-BOARD_COLS - 1, -1,              +1             }, /* resting L pointing up at left */
+   {-1,              +1,              -BOARD_COLS + 1}, /* resting L pointing up at right */
+   {-1,              +1,               BOARD_COLS - 1}, /* resting L pointing down at left */
+   {-1,              +1,               BOARD_COLS + 1}, /* resting L pointing down at right */
+   {-BOARD_COLS,     -1,               +1},             /* hat */
+   {-1,              +1,               BOARD_COLS},     /* up-side-down hat */
+   {-BOARD_COLS,     -1,               BOARD_COLS},     /* tilted hat pointing left */
+   {-BOARD_COLS,     +1,               BOARD_COLS},     /* tilted hat pointing right */
+   {-BOARD_COLS,     +1,               BOARD_COLS + 1}, /* flash going right */
+   {-BOARD_COLS,     -1,               BOARD_COLS - 1}, /* flash going left */
+   {-BOARD_COLS - 1, -BOARD_COLS,      +1            }, /* tilted flash going right */
+   {-BOARD_COLS,     -BOARD_COLS + 1,  -1            }  /* tilted flash going left */
 };
-shape_t shape2 =
-{
-   -BOARD_COLS-1, -BOARD_COLS, +1
-};
+
+int num_shapes = sizeof(shapes)/sizeof(shapes[0]);
 
 void draw_block (int pos, struct color_t color)
 {
@@ -71,10 +87,10 @@ void draw_shape (shape_t shape, int col, int row, struct color_t color)
 
 void render_scene (void)
 {
+   static int shape_id = 0;
    int x, y;
    color_t red   = {1.0, 0.0, 0.0};
    color_t green = {0.0, 1.0, 0.0};
-   color_t blue  = {0.0, 0.0, 1.0};
 
    glClear (GL_COLOR_BUFFER_BIT);
    for (x=0; x<BOARD_COLS; x++)
@@ -83,8 +99,10 @@ void render_scene (void)
 	 if ((x+y)%2)
 	    draw_block (x + y*BOARD_COLS, red);
       }
-   draw_shape (shape1, 5,  5, green);
-   draw_shape (shape2, 1, 10, blue);
+
+   if (shape_id >= num_shapes)
+      shape_id=0;
+   draw_shape (shapes[shape_id++], 5,  5, green);
 }
 
 void GLFWCALL resize_window (int width, int height)
@@ -135,6 +153,8 @@ void init (void)
 
 int main (void)
 {
+   int pressed = 0;
+
    /* Initalize GLFW */
    if (!glfwInit())
    {
@@ -152,10 +172,19 @@ int main (void)
    /* Initialize */
    init ();
 
+   printf ("Press SPACE to cycle through shapes\n");
+   render_scene ();
    /* Main loop. Wait until ESC key was pressed or window was closed */
    while (GLFW_PRESS != glfwGetKey (GLFW_KEY_ESC) && glfwGetWindowParam (GLFW_OPENED))
    {
-      render_scene ();
+      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_SPACE) && !pressed)
+      {
+	 pressed = 1;
+	 render_scene ();
+      }
+      if (GLFW_RELEASE == glfwGetKey (GLFW_KEY_SPACE))
+	 pressed = 0;
+
       glfwSwapBuffers ();
    }
 
