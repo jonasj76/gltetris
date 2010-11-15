@@ -1,4 +1,6 @@
-/* Copyright (c) 2010, Jonas Johansson <jonasj76@gmail.com>
+/* glTetris
+ *
+ * Copyright (c) 2010, Jonas Johansson <jonasj76@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -53,11 +55,11 @@ shape_t shapes[] =
    /*  2 */  {  8, -BOARD_COLS,      BOARD_COLS,      BOARD_COLS + 1}, /* L */
    /*  3 */  { 11, -BOARD_COLS,      BOARD_COLS,      BOARD_COLS - 1}, /* flipped L */
    /*  4 */  { 14, -BOARD_COLS,     -1,               +1            }, /* hat */
-   /*  5 */  { 17, -BOARD_COLS,     +1,               BOARD_COLS + 1}, /* flash going right */
+   /*  5 */  { 17, -BOARD_COLS -1,  -1,               BOARD_COLS    }, /* flash going right */
    /*  6 */  { 18, -BOARD_COLS,     -1,               BOARD_COLS - 1}, /* flash going left */
 
    /* rotated shapes */
-   /*  7 */  {  1, -BOARD_COLS,      BOARD_COLS,      BOARD_COLS * 2}, /* verical line */
+   /*  7 */  {  1, -BOARD_COLS * 2, -BOARD_COLS,      BOARD_COLS    }, /* verical line */
    /*  8 */  {  9, -1,              +1,               BOARD_COLS - 1}, /* resting L pointing down at left */
    /*  9 */  { 10, -BOARD_COLS - 1, -BOARD_COLS,      BOARD_COLS    }, /* up-side-down flipped L */
    /* 10 */  {  2, -1,              +1,              -BOARD_COLS + 1}, /* resting L pointing up at right */
@@ -67,8 +69,8 @@ shape_t shapes[] =
    /* 14 */  { 15, -BOARD_COLS,     +1,               BOARD_COLS    }, /* tilted hat pointing right */
    /* 15 */  { 16, -1,              +1,               BOARD_COLS    }, /* up-side-down hat */
    /* 16 */  {  4, -BOARD_COLS,     -1,               BOARD_COLS    }, /* tilted hat pointing left */
-   /* 17 */  { 5, -BOARD_COLS,     -BOARD_COLS + 1,  -1            }, /* tilted flash going left */
-   /* 18 */  { 6, -BOARD_COLS - 1, -BOARD_COLS,      +1            }  /* tilted flash going right */
+   /* 17 */  {  5, -BOARD_COLS,     -BOARD_COLS + 1,  -1            }, /* tilted flash going left */
+   /* 18 */  {  6, -BOARD_COLS - 1, -BOARD_COLS,      +1            }  /* tilted flash going right */
 };
 
 int num_shapes = 7;
@@ -117,8 +119,8 @@ void render_scene (void)
    for (x=0; x<BOARD_COLS; x++)
       for (y=0; y<BOARD_ROWS; y++)
       {
-	 if ((x+y)%2)
-	    draw_block (x + y*BOARD_COLS, red);
+         if ((x+y)%2)
+            draw_block (x + y*BOARD_COLS, red);
       }
 
    draw_shape (shapes[cur_shape], 5, 5, green);
@@ -199,23 +201,23 @@ int main (void)
    {
       if (GLFW_PRESS == glfwGetKey (GLFW_KEY_SPACE) && !pressed)
       {
-	 pressed = 1;
-	 if (++sel_shape >= num_shapes)
-	    sel_shape = 0;
-	 cur_shape = sel_shape;
-	 printf("Selecting Next Shape (%d)\n", cur_shape);
+         pressed = 1;
+         if (++sel_shape >= num_shapes)
+            sel_shape = 0;
+         cur_shape = sel_shape;
+         printf("Selecting Next Shape (%d)\n", cur_shape);
 
       }
       if (GLFW_PRESS == glfwGetKey ('R') && !pressed)
       {
-	 pressed = 1;
-	 cur_shape = shapes[cur_shape][0];
-	 printf("Rotating Shape\n");
+         pressed = 1;
+         cur_shape = shapes[cur_shape][0];
+         printf("Rotating Shape\n");
       }
       if (GLFW_RELEASE == glfwGetKey (GLFW_KEY_SPACE) &&
-	  GLFW_RELEASE == glfwGetKey ('R'))
+          GLFW_RELEASE == glfwGetKey ('R'))
       {
-	 pressed = 0;
+         pressed = 0;
       }
 
       render_scene ();
