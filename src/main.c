@@ -1,3 +1,18 @@
+/* Copyright (c) 2010, Jonas Johansson <jonasj76@gmail.com>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glfw.h>
@@ -23,35 +38,42 @@ typedef struct color_t
    float b;
 } color_t;
 
-typedef int shape_t[3];
+typedef int shape_t[4];
 
 /* A shape consists of a block at the center and 3 other
  * blocks at the coodinates specified in the space_t type.
+ * First parameter specifies the array position for the
+ * shape rotated.
  */
 shape_t shapes[] =
 {
-   {-BOARD_COLS - 1, -BOARD_COLS,     -1            },  /* square */
-   {-1,              +1,              +2            },  /* horizintal line */
-   {-BOARD_COLS,      BOARD_COLS,      BOARD_COLS * 2}, /* verical line */
-   {-BOARD_COLS,      BOARD_COLS,      BOARD_COLS + 1}, /* L */
-   {-BOARD_COLS,      BOARD_COLS,      BOARD_COLS - 1}, /* flipped L */
-   {-BOARD_COLS,     -BOARD_COLS + 1,  BOARD_COLS    }, /* up-side-down L */
-   {-BOARD_COLS - 1, -BOARD_COLS,      BOARD_COLS    }, /* up-side-down flipped L */
-   {-BOARD_COLS - 1, -1,              +1             }, /* resting L pointing up at left */
-   {-1,              +1,              -BOARD_COLS + 1}, /* resting L pointing up at right */
-   {-1,              +1,               BOARD_COLS - 1}, /* resting L pointing down at left */
-   {-1,              +1,               BOARD_COLS + 1}, /* resting L pointing down at right */
-   {-BOARD_COLS,     -1,               +1},             /* hat */
-   {-1,              +1,               BOARD_COLS},     /* up-side-down hat */
-   {-BOARD_COLS,     -1,               BOARD_COLS},     /* tilted hat pointing left */
-   {-BOARD_COLS,     +1,               BOARD_COLS},     /* tilted hat pointing right */
-   {-BOARD_COLS,     +1,               BOARD_COLS + 1}, /* flash going right */
-   {-BOARD_COLS,     -1,               BOARD_COLS - 1}, /* flash going left */
-   {-BOARD_COLS - 1, -BOARD_COLS,      +1            }, /* tilted flash going right */
-   {-BOARD_COLS,     -BOARD_COLS + 1,  -1            }  /* tilted flash going left */
+   /* basic shapes */
+   /*  0 */  {  0, -BOARD_COLS - 1, -BOARD_COLS,     -1             }, /* square */
+   /*  1 */  {  7, -1,              +1,              +2             }, /* horizintal line */
+   /*  2 */  {  8, -BOARD_COLS,      BOARD_COLS,      BOARD_COLS + 1}, /* L */
+   /*  3 */  { 11, -BOARD_COLS,      BOARD_COLS,      BOARD_COLS - 1}, /* flipped L */
+   /*  4 */  { 14, -BOARD_COLS,     -1,               +1            }, /* hat */
+   /*  5 */  { 17, -BOARD_COLS,     +1,               BOARD_COLS + 1}, /* flash going right */
+   /*  6 */  { 18, -BOARD_COLS,     -1,               BOARD_COLS - 1}, /* flash going left */
+
+   /* rotated shapes */
+   /*  7 */  {  1, -BOARD_COLS,      BOARD_COLS,      BOARD_COLS * 2}, /* verical line */
+   /*  8 */  {  9, -1,              +1,               BOARD_COLS - 1}, /* resting L pointing down at left */
+   /*  9 */  { 10, -BOARD_COLS - 1, -BOARD_COLS,      BOARD_COLS    }, /* up-side-down flipped L */
+   /* 10 */  {  2, -1,              +1,              -BOARD_COLS + 1}, /* resting L pointing up at right */
+   /* 11 */  { 12, -BOARD_COLS - 1, -1,              +1             }, /* resting L pointing up at left */
+   /* 12 */  { 13, -BOARD_COLS,     -BOARD_COLS + 1,  BOARD_COLS    }, /* up-side-down L */
+   /* 13 */  {  3, -1,              +1,               BOARD_COLS + 1}, /* resting L pointing down at right */
+   /* 14 */  { 15, -BOARD_COLS,     +1,               BOARD_COLS    }, /* tilted hat pointing right */
+   /* 15 */  { 16, -1,              +1,               BOARD_COLS    }, /* up-side-down hat */
+   /* 16 */  {  4, -BOARD_COLS,     -1,               BOARD_COLS    }, /* tilted hat pointing left */
+   /* 17 */  { 5, -BOARD_COLS,     -BOARD_COLS + 1,  -1            }, /* tilted flash going left */
+   /* 18 */  { 6, -BOARD_COLS - 1, -BOARD_COLS,      +1            }  /* tilted flash going right */
 };
 
-int num_shapes = sizeof(shapes)/sizeof(shapes[0]);
+int num_shapes = 7;
+int sel_shape  = 0;
+int cur_shape  = 0;
 
 void draw_block (int pos, struct color_t color)
 {
@@ -80,14 +102,13 @@ void draw_shape (shape_t shape, int col, int row, struct color_t color)
 
    pos = col + row * BOARD_COLS;
    draw_block (pos,            color);
-   draw_block (pos + shape[0], color);
    draw_block (pos + shape[1], color);
    draw_block (pos + shape[2], color);
+   draw_block (pos + shape[3], color);
 }
 
 void render_scene (void)
 {
-   static int shape_id = 0;
    int x, y;
    color_t red   = {1.0, 0.0, 0.0};
    color_t green = {0.0, 1.0, 0.0};
@@ -100,9 +121,7 @@ void render_scene (void)
 	    draw_block (x + y*BOARD_COLS, red);
       }
 
-   if (shape_id >= num_shapes)
-      shape_id=0;
-   draw_shape (shapes[shape_id++], 5,  5, green);
+   draw_shape (shapes[cur_shape], 5, 5, green);
 }
 
 void GLFWCALL resize_window (int width, int height)
@@ -173,6 +192,7 @@ int main (void)
    init ();
 
    printf ("Press SPACE to cycle through shapes\n");
+   printf ("Press 'r' to rotate shape\n");
    render_scene ();
    /* Main loop. Wait until ESC key was pressed or window was closed */
    while (GLFW_PRESS != glfwGetKey (GLFW_KEY_ESC) && glfwGetWindowParam (GLFW_OPENED))
@@ -180,11 +200,25 @@ int main (void)
       if (GLFW_PRESS == glfwGetKey (GLFW_KEY_SPACE) && !pressed)
       {
 	 pressed = 1;
-	 render_scene ();
-      }
-      if (GLFW_RELEASE == glfwGetKey (GLFW_KEY_SPACE))
-	 pressed = 0;
+	 if (++sel_shape >= num_shapes)
+	    sel_shape = 0;
+	 cur_shape = sel_shape;
+	 printf("Selecting Next Shape (%d)\n", cur_shape);
 
+      }
+      if (GLFW_PRESS == glfwGetKey ('R') && !pressed)
+      {
+	 pressed = 1;
+	 cur_shape = shapes[cur_shape][0];
+	 printf("Rotating Shape\n");
+      }
+      if (GLFW_RELEASE == glfwGetKey (GLFW_KEY_SPACE) &&
+	  GLFW_RELEASE == glfwGetKey ('R'))
+      {
+	 pressed = 0;
+      }
+
+      render_scene ();
       glfwSwapBuffers ();
    }
 
