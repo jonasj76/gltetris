@@ -77,6 +77,9 @@ int num_shapes = 7;
 int sel_shape  = 0;
 int cur_shape  = 0;
 
+int shape_x    = BOARD_COLS / 2;
+int shape_y    = 0;
+
 void draw_block (int pos, struct color_t color)
 {
    float x, y;
@@ -123,7 +126,7 @@ void render_scene (void)
             draw_block (x + y*BOARD_COLS, red);
       }
 
-   draw_shape (shapes[cur_shape], 5, 5, green);
+   draw_shape (shapes[cur_shape], shape_x, shape_y, green);
 }
 
 void GLFWCALL resize_window (int width, int height)
@@ -194,7 +197,11 @@ int main (void)
    init ();
 
    printf ("Press SPACE to cycle through shapes\n");
-   printf ("Press 'r' to rotate shape\n");
+   printf ("Press UP rotate shape\n");
+   printf ("Press LEFT move shape left\n");
+   printf ("Press RIGHT move shape right\n");
+   printf ("Press DOWN' to move shape down\n");
+
    render_scene ();
    /* Main loop. Wait until ESC key was pressed or window was closed */
    while (GLFW_PRESS != glfwGetKey (GLFW_KEY_ESC) && glfwGetWindowParam (GLFW_OPENED))
@@ -205,17 +212,36 @@ int main (void)
          if (++sel_shape >= num_shapes)
             sel_shape = 0;
          cur_shape = sel_shape;
-         printf("Selecting Next Shape (%d)\n", cur_shape);
-
       }
-      if (GLFW_PRESS == glfwGetKey ('R') && !pressed)
+      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_UP) && !pressed)
       {
          pressed = 1;
          cur_shape = shapes[cur_shape][0];
-         printf("Rotating Shape\n");
       }
+      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_DOWN) && !pressed)
+      {
+         pressed = 1;
+         if (++shape_y >= BOARD_ROWS)
+            shape_y = 0;
+      }
+      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_LEFT) && !pressed)
+      {
+         pressed = 1;
+         if (--shape_x <= 0)
+            shape_x = 0;
+      }
+      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_RIGHT) && !pressed)
+      {
+         pressed = 1;
+         if (++shape_x >= BOARD_COLS)
+            shape_x = BOARD_COLS;
+      }
+
       if (GLFW_RELEASE == glfwGetKey (GLFW_KEY_SPACE) &&
-          GLFW_RELEASE == glfwGetKey ('R'))
+          GLFW_RELEASE == glfwGetKey (GLFW_KEY_UP)    &&
+          GLFW_RELEASE == glfwGetKey (GLFW_KEY_DOWN)  &&
+          GLFW_RELEASE == glfwGetKey (GLFW_KEY_LEFT)  &&
+          GLFW_RELEASE == glfwGetKey (GLFW_KEY_RIGHT)   )
       {
          pressed = 0;
       }
