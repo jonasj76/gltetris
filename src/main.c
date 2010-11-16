@@ -129,6 +129,42 @@ void render_scene (void)
    draw_shape (shapes[cur_shape], shape_x, shape_y, green);
 }
 
+void GLFWCALL handle_input (int key, int action)
+{
+   if (GLFW_RELEASE == action)
+      return;
+
+   switch (key)
+   {
+      case GLFW_KEY_SPACE:
+         if (++sel_shape >= num_shapes)
+            sel_shape = 0;
+         cur_shape = sel_shape;
+         shape_x   = BOARD_COLS / 2;
+         shape_y   = 0;
+         break;
+
+      case GLFW_KEY_UP:
+         cur_shape = shapes[cur_shape][0];
+         break;
+
+      case GLFW_KEY_DOWN:
+         if (++shape_y >= BOARD_ROWS)
+            shape_y = BOARD_ROWS;
+         break;
+
+      case GLFW_KEY_LEFT:
+         if (--shape_x <= 0)
+            shape_x = 0;
+         break;
+
+      case GLFW_KEY_RIGHT:
+         if (++shape_x >= BOARD_COLS)
+            shape_x = BOARD_COLS;
+         break;
+   }
+}
+
 void GLFWCALL resize_window (int width, int height)
 {
    /* Calculate block x- and y-size */
@@ -168,8 +204,9 @@ void init (void)
    /* Select clearing (background) color */
    glClearColor (0.0, 0.0, 0.0, 0.0);
 
-   /* Setup callback for window resizing */
+   /* Setup callbacks */
    glfwSetWindowSizeCallback (resize_window);
+   glfwSetKeyCallback (handle_input);
 
    /* Setup window with init values */
    resize_window (width, height);
@@ -177,8 +214,6 @@ void init (void)
 
 int main (void)
 {
-   int pressed = 0;
-
    /* Initalize GLFW */
    if (!glfwInit())
    {
@@ -206,46 +241,6 @@ int main (void)
    /* Main loop. Wait until ESC key was pressed or window was closed */
    while (GLFW_PRESS != glfwGetKey (GLFW_KEY_ESC) && glfwGetWindowParam (GLFW_OPENED))
    {
-      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_SPACE) && !pressed)
-      {
-         pressed = 1;
-         if (++sel_shape >= num_shapes)
-            sel_shape = 0;
-         cur_shape = sel_shape;
-      }
-      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_UP) && !pressed)
-      {
-         pressed = 1;
-         cur_shape = shapes[cur_shape][0];
-      }
-      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_DOWN) && !pressed)
-      {
-         pressed = 1;
-         if (++shape_y >= BOARD_ROWS)
-            shape_y = 0;
-      }
-      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_LEFT) && !pressed)
-      {
-         pressed = 1;
-         if (--shape_x <= 0)
-            shape_x = 0;
-      }
-      if (GLFW_PRESS == glfwGetKey (GLFW_KEY_RIGHT) && !pressed)
-      {
-         pressed = 1;
-         if (++shape_x >= BOARD_COLS)
-            shape_x = BOARD_COLS;
-      }
-
-      if (GLFW_RELEASE == glfwGetKey (GLFW_KEY_SPACE) &&
-          GLFW_RELEASE == glfwGetKey (GLFW_KEY_UP)    &&
-          GLFW_RELEASE == glfwGetKey (GLFW_KEY_DOWN)  &&
-          GLFW_RELEASE == glfwGetKey (GLFW_KEY_LEFT)  &&
-          GLFW_RELEASE == glfwGetKey (GLFW_KEY_RIGHT)   )
-      {
-         pressed = 0;
-      }
-
       render_scene ();
       glfwSwapBuffers ();
    }
